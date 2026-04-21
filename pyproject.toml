@@ -20,3 +20,11 @@ known-first-party = ["models"]
 
 [tool.ruff.format]
 # Default (double quotes, 4 spaces) — fine with our existing style.
+
+[tool.pyright]
+typeCheckingMode = "basic"
+pythonVersion = "3.9"
+venvPath = "."
+venv = "venv"
+include = ["."]
+exclude = ["venv", "scripts", "**/__pycache__"]
