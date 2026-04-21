@@ -27,11 +27,6 @@ if not CHANNEL_ID_TO_MONITOR:
 ADMIN_USERNAME = config('ADMIN_USERNAME', default='')
 if not ADMIN_USERNAME:
     raise ValueError("ADMIN_USERNAME is not set!")
-SENTRY_DNS = config('SENTRY_DNS', default='')
-if not SENTRY_DNS:
-    raise ValueError("SENTRY_DNS is not set!")
-
-sentry_sdk.init(dsn=SENTRY_DNS)
 
 async def setup_telethon():
     try:
