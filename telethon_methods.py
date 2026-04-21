@@ -24,9 +24,6 @@ if not PHONE_NUMBER:
 CHANNEL_ID_TO_MONITOR = config('CHANNEL_ID_TO_MONITOR', default='')
 if not CHANNEL_ID_TO_MONITOR:
     raise ValueError("CHANNEL_ID_TO_MONITOR is not set!")
-ADMIN_USERNAME = config('ADMIN_USERNAME', default='')
-if not ADMIN_USERNAME:
-    raise ValueError("ADMIN_USERNAME is not set!")
 
 async def setup_telethon():
     try:
