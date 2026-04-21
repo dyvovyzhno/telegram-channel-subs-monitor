@@ -2,144 +2,135 @@
 
 This is a Python-based automation tool utilizing Telethon to emulate and automate Telegram client activities, specifically monitoring channel subscriptions.
 
-## Key Features:
+## Key Features
 
 - **Automated Monitoring**: Regularly checks for user subscription and unsubscription events on a Telegram channel.
 - **Service-Oriented**: Runs as a continuous service on Linux, fetching admin actions every 5 minutes.
 - **Efficient Storage**: Actions are hashed based on the date and user ID. Only unique actions are saved to the Firebase Firestore database, preventing duplicates.
 - **Real-time Notifications**: Sends detailed alerts of each action to another Telegram channel or group. These alerts include user ID, nickname, first and last name, action date, and the corresponding hash.
-- **Sentry Integration (Optional)**: Monitor application health and track potential issues with Sentry. 
+- **Sentry Integration (Optional)**: Monitor application health and track potential issues with Sentry.
 
 ## Requirements
 
-### System:
+### System
 - **OS**: Linux-based machine.
 - **Permissions**: User with `sudo` access.
-- **Runtime**: Python 3.x installed.
+- **Runtime**: Python **3.12+** (managed by [uv](https://docs.astral.sh/uv/)).
+- **Package manager**: [uv](https://docs.astral.sh/uv/getting-started/installation/) — installs Python itself and resolves dependencies from `pyproject.toml` / `uv.lock`.
 
-### Firebase Firestore:
-1. **Database Setup**: 
-    - Create a collection named `admin_actions`.
-    - Insert an empty document with a random name within this collection.
-2. **Private Key Configuration**: 
-    - Download your Firebase private key file from the [Firebase console](https://console.firebase.google.com/).
-    - Rename the key file to `serviceAccountKey.json`.
-    - Place it in the root directory of the project (where `main.py` is located).
+### Firebase Firestore
+1. **Database Setup**: create a collection named `admin_actions` in Firestore. No seed document is required — the app writes on its own.
+2. **Private Key**: download your Firebase private key JSON from the [Firebase console](https://console.firebase.google.com/), rename to `serviceAccountKey.json`, and place it in the project root (same directory as `main.py`).
 
-### Telegram:
-1. **API Credentials**: 
-    - Register on [my.telegram.org](https://my.telegram.org/) to obtain `api_id` and `api_hash`.
-2. **Channel to Monitor**: 
-    - Ensure you have a Telegram channel nickname you want to monitor (e.g., `@channel_name`).
-3. **Bot Token**: 
-    - Create a Telegram bot via [t.me/BotFather](https://t.me/BotFather) and note down the token.
-4. **Notification Receiver ID**: 
-    - Decide on a Telegram channel or group to receive notifications.
-    - Obtain the chat id for this destination (e.g., `-1001234567890`). 
-    - If you're unfamiliar with this process, follow this [guide](https://gist.github.com/mraaroncruz/e76d19f7d61d59419002db54030ebe35) to get the chat ID.
-5. **Notification Receiver Invite Link**: 
-    - Create an invite link for the notification receiver channel or group.
-    - This will be used to check if all events were successfully sent to the notification receiver.
-    - Example for private channel: `https://t.me/+IybSNCg_1a2b3c4d5e`
-6. **Add bot to notification receiver**: 
-    - Add the bot to the notification receiver channel or group.
-    - Give the bot admin privileges to allow it to send messages.
+### Telegram
+1. **API Credentials**: register on [my.telegram.org](https://my.telegram.org/) to get `api_id` and `api_hash`.
+2. **Channel to Monitor**: have the username of the channel you want to watch (e.g. `@channel_name`).
+3. **Bot Token**: create a bot via [@BotFather](https://t.me/BotFather).
+4. **Notification Receiver ID**: pick a Telegram channel or group to receive notifications and obtain its chat id (e.g. `-1001234567890`). Guide: <https://gist.github.com/mraaroncruz/e76d19f7d61d59419002db54030ebe35>.
+5. **Receiver Invite Link**: create an invite link for the receiver (used to verify delivery). Example for private channels: `https://t.me/+IybSNCg_1a2b3c4d5e`.
+6. **Bot in Receiver**: add the bot to the receiver channel/group with admin privileges so it can send messages.
 
-### Sentry (Optional):
-- **DSN**: Obtain a DSN (Data Source Name) from your Sentry account. This will be used to send error logs and tracking info to Sentry for monitoring the application's health.
+### Sentry (Optional)
+- **DSN**: obtain a DSN from your Sentry account — used to ship error/trace data.
 
+## Installation (from scratch)
 
-## Installation
+Run on the machine that will host the service.
 
-### 1. Create a new directory for the project using the terminal
 ```bash
-mkdir telegram-stats-monitor
-```
+# 1. Install uv (one-time)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env   # or restart the shell
 
-### 2. Navigate to the project directory
-```bash
-cd telegram-stats-monitor
-```
+# 2. Clone
+git clone git@github.com:dyvovyzhno/telegram-channel-subs-monitor.git
+cd telegram-channel-subs-monitor
 
-### 3. Clone the repository to machine that will run the service
-```bash
-git clone git@github.com:preckrasno/telegram-channel-subs-monitor.git .
-```
+# 3. Install Python 3.12 and sync dependencies into .venv
+uv python install 3.12
+uv sync
 
-### 4. Set Up a virtual environment
-```bash
-python3 -m venv venv
-```
+# 4. Create .env from the template and fill real values
+cp .env.example .env
+# edit .env
 
-### 5. Activate virtual environment
-mac/linux
-```bash
-source venv/bin/activate
-```
+# 5. Place serviceAccountKey.json in the project root (see Firebase section above)
 
-### 6. Install required packages from requirements.txt
-```bash
-pip install -r requirements.txt
-```
+# 6. Log in to Telegram once interactively to create anon.session
+.venv/bin/python main.py
+# Enter the SMS code (and 2FA password if set). After you see
+# "Fetching new admin actions..." a second time (5 min after the first),
+# press Ctrl+C to stop.
 
-### 7. Create Configuration
-Create .env file in the root directory and add variables using .env.example file as a template
-
-### 8. Firebase Firestore Setup
-Ensure the Firebase private key file `serviceAccountKey.json` is in the root directory from [step 2](#firebase-firestore) on Firebase Firestore setup. Execute the following command and find the file in the root directory
-```bash
-ls
-```
-
-### 9. Initial Run to Setup Telegram Session
-Run the script manually for the first time to login into telegram and create session file
-```bash
-python3 main.py
-```
-
-### 10. Deactivate the Virtual Environment
-After logging in, stop the script `(ctrl+c)` and deactivate the virtual environment
-```bash
-deactivate
-```
-
-### 11. Set up systemd service
-- Edit `telegram-stats-monitor.service` file and change `ExecStart` and `WorkingDirectory` to the correct path
-- Move the service file to the systemd directory:
- (`telegram-stats-monitor.service` to `/etc/systemd/system/`)
-```bash
+# 7. Set up the systemd service
+# The unit file (telegram-stats-monitor.service) is already shipped with the
+# correct /home/ubuntu/proj/telegram-stats-monitor/ paths. If your
+# WorkingDirectory differs, edit it before copying.
 sudo cp telegram-stats-monitor.service /etc/systemd/system/
-```
-- Reload the systemd daemon to recognize your service:
-```bash
 sudo systemctl daemon-reload
-```
-- Enable the service to start on boot:
-```bash
 sudo systemctl enable telegram-stats-monitor.service
-```
-- Start the service:
-```bash
 sudo systemctl start telegram-stats-monitor.service
 ```
-- Check the status of the service (optional):
+
+## Deploying updates
+
+When new commits land on `main` and you want the server to pick them up:
+
 ```bash
-sudo systemctl status telegram-stats-monitor.service
+# 1. SSH and go to the project
+ssh <user>@<server>
+cd /home/ubuntu/proj/telegram-stats-monitor/
+
+# 2. Stop the service
+sudo systemctl stop telegram-stats-monitor
+
+# 3. Pull latest
+git pull origin main
+
+# 4. Re-sync deps (cheap no-op if nothing changed)
+uv sync
+
+# 5. If the systemd unit changed in this release, redeploy it
+sudo cp telegram-stats-monitor.service /etc/systemd/system/
+sudo systemctl daemon-reload
+
+# 6. Start and tail the logs
+sudo systemctl start telegram-stats-monitor
+sudo journalctl -u telegram-stats-monitor -f
+# Look for two "Fetching new admin actions..." lines 5 min apart — that
+# confirms a full job cycle completed cleanly.
 ```
-- To view logs, use the following command. Add the `-e` flag for real-time logs (optional):
+
+If `.env` gained a new required variable in the release (rare, but check the PR description), add it before starting the service.
+
+## Local development
+
+Dev tooling (`ruff`, `pyright`) lives in the `dev` dependency group and is installed automatically by `uv sync`.
+
 ```bash
-sudo journalctl -u telegram-stats-monitor.service
+uv sync                 # installs runtime + dev deps into .venv
+.venv/bin/ruff check .  # lint
+.venv/bin/ruff format . # format
+.venv/bin/pyright .     # type-check (basic mode)
 ```
-or 
+
+Follow-ups that are deferred (hooks, CI, strict typing) are tracked in [TODO.md](TODO.md).
+
+## Operations
+
 ```bash
-sudo journalctl -u telegram-stats-monitor.service -e
-```
-- Stopping and restarting the service (optional)
-```bash
-sudo systemctl stop telegram-stats-monitor.service
-sudo systemctl restart telegram-stats-monitor.service
-```
-- To disable the service from starting on boot (optional):
-```bash
-sudo systemctl disable telegram-stats-monitor.service
+# Status
+sudo systemctl status telegram-stats-monitor
+
+# Live logs
+sudo journalctl -u telegram-stats-monitor -f
+
+# Restart
+sudo systemctl restart telegram-stats-monitor
+
+# Stop
+sudo systemctl stop telegram-stats-monitor
+
+# Disable autostart
+sudo systemctl disable telegram-stats-monitor
 ```
