@@ -1,17 +1,21 @@
 # main.py
 
 import asyncio
-import sentry_sdk
 
+import sentry_sdk
 from decouple import config
 
-from telethon_methods import setup_telethon, get_admin_actions, get_last_message_hash
-from firebase_methods import store_action_to_firebase, get_last_hash_from_firebase, send_missing_events_to_channel
+from firebase_methods import (
+    get_last_hash_from_firebase,
+    send_missing_events_to_channel,
+    store_action_to_firebase,
+)
+from telethon_methods import get_admin_actions, get_last_message_hash, setup_telethon
 
-SENTRY_DSN = config('SENTRY_DSN', default='')
+SENTRY_DSN = config("SENTRY_DSN", default="")
 if not SENTRY_DSN:
     raise ValueError("SENTRY_DSN is not set!")
-CHAT_URL = config('CHAT_URL', default='')
+CHAT_URL = config("CHAT_URL", default="")
 if not CHAT_URL:
     raise ValueError("CHAT_URL is not set!")
 
@@ -22,6 +26,7 @@ sentry_sdk.init(
 )
 
 client = None
+
 
 async def job():
     try:
@@ -57,13 +62,16 @@ async def job():
         sentry_sdk.capture_exception(e)
         print(f"Error in job: {e}")
 
+
 async def wait_for_five_minutes():
     await asyncio.sleep(300)  # Sleep for 300 seconds (5 minutes)
+
 
 async def scheduler():
     while True:
         await job()
         await wait_for_five_minutes()
+
 
 if __name__ == "__main__":
     asyncio.run(scheduler())

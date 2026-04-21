@@ -1,0 +1,22 @@
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+# Curated set — keep signal high, avoid noisy style-only rules for now.
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes (unused imports/vars, undefined names)
+    "I",    # isort (import order)
+    "UP",   # pyupgrade (py39+ idioms)
+    "B",    # flake8-bugbear (likely bugs)
+    "SIM",  # flake8-simplify
+    "ASYNC",# async/await pitfalls
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["models"]
+
+[tool.ruff.format]
+# Default (double quotes, 4 spaces) — fine with our existing style.

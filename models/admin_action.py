@@ -2,11 +2,21 @@
 
 import hashlib
 
+
 class AdminAction:
-    # contains action (joined, left), date, user_id, user_username, user_firstname, user_lastname, total_channel_members, total_joined, total_left
-    def __init__(self, action: str, date: str, user_id: int, user_username: str, user_firstname: str,
-                 user_lastname: str, total_channel_members: int, total_joined: int, total_left: int,
-                 user_phone: str):
+    def __init__(
+        self,
+        action: str,
+        date: str,
+        user_id: int,
+        user_username: str,
+        user_firstname: str,
+        user_lastname: str,
+        total_channel_members: int,
+        total_joined: int,
+        total_left: int,
+        user_phone: str,
+    ):
         self.action = action
         self.date = date
         self.user_id = user_id
@@ -28,15 +38,15 @@ class AdminAction:
     def to_dict(self) -> dict:
         """Converts the object to a dictionary, suitable for Firebase storage."""
         return {
-            'hash': self.hash,
-            'action': self.action,
-            'date': self.date,
-            'user_id': self.user_id,
-            'user_username': self.user_username,
-            'user_firstname': self.user_firstname,
-            'user_lastname': self.user_lastname,
-            'user_phone': self.user_phone,
-            'total_channel_members': self.total_channel_members,
-            'total_joined': self.total_joined,
-            'total_left': self.total_left
+            "hash": self.hash,
+            "action": self.action,
+            "date": self.date,
+            "user_id": self.user_id,
+            "user_username": self.user_username,
+            "user_firstname": self.user_firstname,
+            "user_lastname": self.user_lastname,
+            "user_phone": self.user_phone,
+            "total_channel_members": self.total_channel_members,
+            "total_joined": self.total_joined,
+            "total_left": self.total_left,
         }
