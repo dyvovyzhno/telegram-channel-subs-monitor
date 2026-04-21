@@ -57,9 +57,11 @@ def store_action_to_firebase(action_data: dict):
 
             if previous_actions:
                 # sort by date
-                previous_actions = sorted(previous_actions, key=lambda doc: doc.to_dict()["date"])
+                previous_actions = sorted(
+                    previous_actions, key=lambda doc: (doc.to_dict() or {}).get("date", "")
+                )
                 # get latest action
-                latest_action = previous_actions[-1].to_dict()
+                latest_action = previous_actions[-1].to_dict() or {}
                 if action_data["action"] == "Joined":
                     action_data["total_joined"] = latest_action["total_joined"] + 1
                     action_data["total_left"] = latest_action["total_left"]
@@ -92,7 +94,7 @@ def send_missing_events_to_channel(last_known_hash):
         print("Hash not found.")
         return
 
-    hash_date = hash_date_doc[0].to_dict().get("date")
+    hash_date = (hash_date_doc[0].to_dict() or {}).get("date")
 
     # Get all actions after the date of the last_known_hash
     missing_actions = (
@@ -102,7 +104,7 @@ def send_missing_events_to_channel(last_known_hash):
     )
 
     for action in missing_actions:
-        action_data = action.to_dict()
+        action_data = action.to_dict() or {}
         message = "\n".join([f"{key}: {value}" for key, value in action_data.items()])
         send_message_to_channel(BOT_API, CHAT_ID, message)
 
@@ -118,5 +120,5 @@ def get_last_hash_from_firebase():
     )
 
     if last_action:
-        return last_action[0].to_dict().get("hash")
+        return (last_action[0].to_dict() or {}).get("hash")
     return None
