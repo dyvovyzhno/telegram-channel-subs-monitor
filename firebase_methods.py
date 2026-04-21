@@ -50,18 +50,19 @@ def store_action_to_firebase(action_data: dict):
 
         # If no matching action was found, add the new action_data
         if not matching_actions:
-            # Check if the user_id exists in any previous actions
-            previous_actions = admin_actions_ref.where(
-                filter=FieldFilter("user_id", "==", action_data["user_id"])
-            ).get(timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY)
+            # Fetch only the most recent prior action for this user — Firestore sorts and
+            # limits server-side, backed by the composite (user_id asc, date desc) index.
+            previous_actions = (
+                admin_actions_ref.where(
+                    filter=FieldFilter("user_id", "==", action_data["user_id"])
+                )
+                .order_by("date", direction=Query.DESCENDING)
+                .limit(1)
+                .get(timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY)
+            )
 
             if previous_actions:
-                # sort by date
-                previous_actions = sorted(
-                    previous_actions, key=lambda doc: (doc.to_dict() or {}).get("date", "")
-                )
-                # get latest action
-                latest_action = previous_actions[-1].to_dict() or {}
+                latest_action = previous_actions[0].to_dict() or {}
                 if action_data["action"] == "Joined":
                     action_data["total_joined"] = latest_action["total_joined"] + 1
                     action_data["total_left"] = latest_action["total_left"]
