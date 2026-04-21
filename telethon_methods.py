@@ -83,9 +83,8 @@ async def get_admin_actions(client):
         user_username = "@" + user.username if user.username else ''
         user_firstname = user.first_name if user.first_name else ''
         user_lastname = user.last_name if user.last_name else ''
-        user_phone = user.phone if hasattr(user, 'phone') else ''
-        user_description = user.about if hasattr(user, 'about') else ''
-        
+        user_phone = getattr(user, 'phone', '') or ''
+
 
         # Determine the action - Joined or Left
         if isinstance(entry.action, ChannelAdminLogEventActionParticipantJoin):
@@ -108,7 +107,6 @@ async def get_admin_actions(client):
             0,  # total_joined placeholder
             0,   # total_left placeholder
             user_phone,
-            user_description
         )
         actions_data.append(action)
 

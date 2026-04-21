@@ -4,9 +4,9 @@ import hashlib
 
 class AdminAction:
     # contains action (joined, left), date, user_id, user_username, user_firstname, user_lastname, total_channel_members, total_joined, total_left
-    def __init__(self, action: str, date: str, user_id: int, user_username: str, user_firstname: str, 
-                 user_lastname: str, total_channel_members: int, total_joined: int, total_left: int, 
-                 user_phone: str, user_description: str):
+    def __init__(self, action: str, date: str, user_id: int, user_username: str, user_firstname: str,
+                 user_lastname: str, total_channel_members: int, total_joined: int, total_left: int,
+                 user_phone: str):
         self.action = action
         self.date = date
         self.user_id = user_id
@@ -17,7 +17,6 @@ class AdminAction:
         self.total_joined = total_joined
         self.total_left = total_left
         self.user_phone = user_phone
-        self.user_description = user_description
         self.hash = self.generate_hash()
 
     def generate_hash(self) -> str:
@@ -37,7 +36,6 @@ class AdminAction:
             'user_firstname': self.user_firstname,
             'user_lastname': self.user_lastname,
             'user_phone': self.user_phone,
-            'user_description': self.user_description,
             'total_channel_members': self.total_channel_members,
             'total_joined': self.total_joined,
             'total_left': self.total_left
