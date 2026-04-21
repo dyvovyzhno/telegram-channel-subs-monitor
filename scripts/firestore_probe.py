@@ -17,7 +17,6 @@ import traceback
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-
 TIMEOUT_S = 20
 
 
@@ -66,7 +65,12 @@ def _install_alarm():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=("sync", "async"), default="sync")
-    parser.add_argument("--idle", type=int, default=0, help="seconds to sleep between client init and query")
+    parser.add_argument(
+        "--idle",
+        type=int,
+        default=0,
+        help="seconds to sleep between client init and query",
+    )
     args = parser.parse_args()
 
     if args.idle > 0:
