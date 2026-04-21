@@ -131,8 +131,9 @@ async def get_last_message_hash(client, channel_id):
             return None
 
         # find first message with hash
+        hash_match = None
         for message in messages:
-            hash_match = re.search(r"([a-fA-F0-9]{64})", message.message)
+            hash_match = re.search(r"([a-fA-F0-9]{64})", message.message or "")
             if hash_match:
                 break
 
