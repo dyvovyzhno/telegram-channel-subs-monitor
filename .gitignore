@@ -5,3 +5,6 @@ serviceAccountKey.json
 .env
 .DS_Store
 .vscode/
+__pycache__/
+*.pyc
+*.pyo
