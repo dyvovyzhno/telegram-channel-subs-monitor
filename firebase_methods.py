@@ -4,7 +4,7 @@ import firebase_admin
 from decouple import config
 from firebase_admin import credentials, firestore
 from google.api_core.retry import Retry
-from google.cloud.firestore import Query
+from google.cloud.firestore import FieldFilter, Query
 from sentry_sdk import capture_exception
 
 from bot_methods import send_message_to_channel
@@ -44,16 +44,16 @@ def store_action_to_firebase(action_data: dict):
 
     try:
         # Check if an action with the same hash already exists
-        matching_actions = admin_actions_ref.where("hash", "==", action_data["hash"]).get(
-            timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY
-        )
+        matching_actions = admin_actions_ref.where(
+            filter=FieldFilter("hash", "==", action_data["hash"])
+        ).get(timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY)
 
         # If no matching action was found, add the new action_data
         if not matching_actions:
             # Check if the user_id exists in any previous actions
-            previous_actions = admin_actions_ref.where("user_id", "==", action_data["user_id"]).get(
-                timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY
-            )
+            previous_actions = admin_actions_ref.where(
+                filter=FieldFilter("user_id", "==", action_data["user_id"])
+            ).get(timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY)
 
             if previous_actions:
                 # sort by date
@@ -86,9 +86,9 @@ def send_missing_events_to_channel(last_known_hash):
     admin_actions_ref = db.collection("admin_actions")
 
     # Get the date of the last_known_hash
-    hash_date_doc = admin_actions_ref.where("hash", "==", last_known_hash).get(
-        timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY
-    )
+    hash_date_doc = admin_actions_ref.where(
+        filter=FieldFilter("hash", "==", last_known_hash)
+    ).get(timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY)
 
     if not hash_date_doc:
         print("Hash not found.")
@@ -98,7 +98,7 @@ def send_missing_events_to_channel(last_known_hash):
 
     # Get all actions after the date of the last_known_hash
     missing_actions = (
-        admin_actions_ref.where("date", ">", hash_date)
+        admin_actions_ref.where(filter=FieldFilter("date", ">", hash_date))
         .order_by("date")
         .get(timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY)
     )
