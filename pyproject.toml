@@ -1,5 +1,30 @@
+[project]
+name = "telegram-channel-subs-monitor"
+version = "0.0.0"
+description = "Monitors Telegram channel admin log for joins/leaves, stores in Firestore, notifies a bot chat."
+requires-python = ">=3.12"
+# Direct runtime dependencies only. Transitive deps (grpcio, cryptography,
+# google-cloud-*, etc.) are resolved by uv and pinned in uv.lock.
+# Upper bounds cap the next major to avoid accidental breaking upgrades —
+# deliberate bumps live in their own PR.
+dependencies = [
+    "firebase-admin>=6.2,<7",
+    "google-api-core>=2.11,<3",
+    "google-cloud-firestore>=2.11,<3",
+    "python-decouple>=3.8,<4",
+    "requests>=2.31,<3",
+    "sentry-sdk>=1.31,<2",
+    "telethon>=1.29,<2",
+]
+
+[dependency-groups]
+dev = [
+    "pyright",
+    "ruff",
+]
+
 [tool.ruff]
-target-version = "py39"
+target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
@@ -9,7 +34,7 @@ select = [
     "W",    # pycodestyle warnings
     "F",    # pyflakes (unused imports/vars, undefined names)
     "I",    # isort (import order)
-    "UP",   # pyupgrade (py39+ idioms)
+    "UP",   # pyupgrade (py312+ idioms)
     "B",    # flake8-bugbear (likely bugs)
     "SIM",  # flake8-simplify
     "ASYNC",# async/await pitfalls
@@ -23,8 +48,8 @@ known-first-party = ["models"]
 
 [tool.pyright]
 typeCheckingMode = "basic"
-pythonVersion = "3.9"
+pythonVersion = "3.12"
 venvPath = "."
-venv = "venv"
+venv = ".venv"
 include = ["."]
-exclude = ["venv", "scripts", "**/__pycache__"]
+exclude = [".venv", "scripts", "**/__pycache__"]
