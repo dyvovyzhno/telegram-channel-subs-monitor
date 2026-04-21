@@ -1,0 +1,7 @@
+# Dev-only tooling. Install with:
+#   venv/bin/pip install -r requirements-dev.txt
+# Unpinned intentionally — these are not runtime deps and it's fine to
+# pull newer versions. Proper pinning will arrive with the pyproject.toml
+# migration (main plan, PR #3).
+ruff
+pyright
