@@ -4,6 +4,7 @@ import firebase_admin
 from decouple import config
 from firebase_admin import credentials, firestore
 from google.api_core.retry import Retry
+from google.cloud.firestore import Query
 from sentry_sdk import capture_exception
 
 from bot_methods import send_message_to_channel
@@ -111,7 +112,7 @@ def get_last_hash_from_firebase():
 
     # Order by date to get the latest action and retrieve only one record
     last_action = (
-        admin_actions_ref.order_by("date", direction=firestore.Query.DESCENDING)
+        admin_actions_ref.order_by("date", direction=Query.DESCENDING)
         .limit(1)
         .get(timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY)
     )

@@ -12,10 +12,10 @@ from firebase_methods import (
 )
 from telethon_methods import get_admin_actions, get_last_message_hash, setup_telethon
 
-SENTRY_DSN = config("SENTRY_DSN", default="")
+SENTRY_DSN = str(config("SENTRY_DSN", default=""))
 if not SENTRY_DSN:
     raise ValueError("SENTRY_DSN is not set!")
-CHAT_URL = config("CHAT_URL", default="")
+CHAT_URL = str(config("CHAT_URL", default=""))
 if not CHAT_URL:
     raise ValueError("CHAT_URL is not set!")
 
