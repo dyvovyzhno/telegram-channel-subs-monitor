@@ -32,8 +32,9 @@ def send_message_to_channel(bot_token, chat_id, message_text):
     # Optionally, handle the response to check if the message was sent successfully
     if response.status_code == 200:
         return response.json()
-    else:
-        # Optionally, raise an error or print the response to debug issues
+
+    try:
         response.raise_for_status()
-        # send to sentry
-        capture_exception(response.raise_for_status())
+    except requests.HTTPError as e:
+        capture_exception(e)
+        raise
