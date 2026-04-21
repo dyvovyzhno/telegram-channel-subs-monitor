@@ -8,16 +8,16 @@ from decouple import config
 from telethon_methods import setup_telethon, get_admin_actions, get_last_message_hash
 from firebase_methods import store_action_to_firebase, get_last_hash_from_firebase, send_missing_events_to_channel
 
-SENTRY_DNS = config('SENTRY_DNS', default='')
-if not SENTRY_DNS:
-    raise ValueError("SENTRY_DNS is not set!")
+SENTRY_DSN = config('SENTRY_DSN', default='')
+if not SENTRY_DSN:
+    raise ValueError("SENTRY_DSN is not set!")
 CHAT_URL = config('CHAT_URL', default='')
 if not CHAT_URL:
     raise ValueError("CHAT_URL is not set!")
 
 # Initialize Sentry at the top
 sentry_sdk.init(
-    dsn=SENTRY_DNS,
+    dsn=SENTRY_DSN,
     traces_sample_rate=1.0,  # Adjust this rate as per your needs
 )
 
