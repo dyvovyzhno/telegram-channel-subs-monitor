@@ -2,9 +2,16 @@
 
 import firebase_admin
 from firebase_admin import credentials, firestore
+from google.api_core.retry import Retry
 from bot_methods import send_message_to_channel
 from decouple import config
 from sentry_sdk import capture_exception
+
+
+# Fail fast if Firestore is unreachable instead of hanging the whole scheduler.
+# deadline bounds total wait across retries; timeout is per-attempt.
+_FIRESTORE_TIMEOUT = 10.0
+_FIRESTORE_RETRY = Retry(deadline=30.0)
 
 
 # BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
@@ -35,12 +42,16 @@ def store_action_to_firebase(action_data: dict):
     
     try:
         # Check if an action with the same hash already exists
-        matching_actions = admin_actions_ref.where('hash', '==', action_data['hash']).get()
+        matching_actions = admin_actions_ref.where('hash', '==', action_data['hash']).get(
+            timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY
+        )
 
         # If no matching action was found, add the new action_data
         if not matching_actions:
             # Check if the user_id exists in any previous actions
-            previous_actions = admin_actions_ref.where('user_id', '==', action_data['user_id']).get()
+            previous_actions = admin_actions_ref.where('user_id', '==', action_data['user_id']).get(
+                timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY
+            )
             
             if previous_actions:
                 
@@ -55,7 +66,7 @@ def store_action_to_firebase(action_data: dict):
                     action_data['total_joined'] = latest_action['total_joined']
                     action_data['total_left'] = latest_action['total_left'] + 1
             
-            admin_actions_ref.add(action_data)
+            admin_actions_ref.add(action_data, timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY)
             print(f"Stored action data for user {action_data['user_id']} to Firestore")
 
             message = "\n".join([f"{key}: {value}" for key, value in action_data.items()])
@@ -71,7 +82,9 @@ def send_missing_events_to_channel(last_known_hash):
     admin_actions_ref = db.collection('admin_actions')
 
     # Get the date of the last_known_hash
-    hash_date_doc = admin_actions_ref.where('hash', '==', last_known_hash).get()
+    hash_date_doc = admin_actions_ref.where('hash', '==', last_known_hash).get(
+        timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY
+    )
 
     if not hash_date_doc:
         print("Hash not found.")
@@ -80,7 +93,9 @@ def send_missing_events_to_channel(last_known_hash):
     hash_date = hash_date_doc[0].to_dict().get('date')
 
     # Get all actions after the date of the last_known_hash
-    missing_actions = admin_actions_ref.where('date', '>', hash_date).order_by('date').get()
+    missing_actions = admin_actions_ref.where('date', '>', hash_date).order_by('date').get(
+        timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY
+    )
 
     for action in missing_actions:
         action_data = action.to_dict()
@@ -91,7 +106,9 @@ def get_last_hash_from_firebase():
     admin_actions_ref = db.collection('admin_actions')
     
     # Order by date to get the latest action and retrieve only one record
-    last_action = admin_actions_ref.order_by('date', direction=firestore.Query.DESCENDING).limit(1).get()
+    last_action = admin_actions_ref.order_by('date', direction=firestore.Query.DESCENDING).limit(1).get(
+        timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY
+    )
 
     if last_action:
         return last_action[0].to_dict().get("hash")
