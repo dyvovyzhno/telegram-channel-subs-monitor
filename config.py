@@ -36,5 +36,8 @@ class Settings(BaseSettings):
     # Sentry DSN (required; the pipeline relies on it for error visibility)
     SENTRY_DSN: str = Field(min_length=1)
 
+    # Logging verbosity — raise to "DEBUG" when investigating, lower to "WARNING" for quieter prod
+    LOG_LEVEL: str = "INFO"
+
 
 settings = Settings()  # type: ignore[call-arg]
