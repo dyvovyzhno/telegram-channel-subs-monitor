@@ -20,7 +20,9 @@ This is a Python-based automation tool utilizing Telethon to emulate and automat
 
 ### Firebase Firestore
 1. **Database Setup**: create a collection named `admin_actions` in Firestore. No seed document is required — the app writes on its own.
-2. **Private Key**: download your Firebase private key JSON from the [Firebase console](https://console.firebase.google.com/), rename to `serviceAccountKey.json`, and place it in the project root (same directory as `main.py`).
+2. **Private Key**: download the Firebase service-account JSON from the [Firebase console](https://console.firebase.google.com/). Two placement options:
+   - **Quick-start (default)**: rename to `serviceAccountKey.json` and put it in the project root next to `main.py`. The app picks it up automatically.
+   - **Production-recommended**: store the key outside the repo (e.g. `/etc/secrets/firebase-key.json` with `0640` mode, owned by the service user), then point at it with `GOOGLE_APPLICATION_CREDENTIALS=/etc/secrets/firebase-key.json` in `.env`. Keeps the secret off the filesystem next to code and survives `git clean` / container rebuilds.
 
 ### Telegram
 1. **API Credentials**: register on [my.telegram.org](https://my.telegram.org/) to get `api_id` and `api_hash`.
@@ -54,12 +56,14 @@ uv sync
 cp .env.example .env
 # edit .env
 
-# 5. Place serviceAccountKey.json in the project root (see Firebase section above)
+# 5. Provide the Firebase credentials (pick one — see Firebase section):
+#    - drop serviceAccountKey.json in the project root, OR
+#    - point GOOGLE_APPLICATION_CREDENTIALS in .env at an absolute path
 
 # 6. Log in to Telegram once interactively to create anon.session
 .venv/bin/python main.py
 # Enter the SMS code (and 2FA password if set). After you see
-# "Fetching new admin actions..." a second time (5 min after the first),
+# "Fetching new admin actions" logged a second time (5 min after the first),
 # press Ctrl+C to stop.
 
 # 7. Set up the systemd service
@@ -97,8 +101,9 @@ sudo systemctl daemon-reload
 # 6. Start and tail the logs
 sudo systemctl start telegram-stats-monitor
 sudo journalctl -u telegram-stats-monitor -f
-# Look for two "Fetching new admin actions..." lines 5 min apart — that
-# confirms a full job cycle completed cleanly.
+# Look for two lines like
+#   2026-04-22 16:51:24 INFO    __main__: Fetching new admin actions
+# 5 min apart — that confirms a full job cycle completed cleanly.
 ```
 
 If `.env` gained a new required variable in the release (rare, but check the PR description), add it before starting the service.
@@ -134,3 +139,5 @@ sudo systemctl stop telegram-stats-monitor
 # Disable autostart
 sudo systemctl disable telegram-stats-monitor
 ```
+
+To dial log verbosity without a code change, set `LOG_LEVEL` in `.env` (defaults to `INFO`; use `DEBUG` during investigation, `WARNING` for quieter prod) and restart the service.
