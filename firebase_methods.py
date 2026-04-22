@@ -19,8 +19,11 @@ _FIRESTORE_TIMEOUT = 10.0
 _FIRESTORE_RETRY = Retry(deadline=30.0)
 
 
-# Initialize Firebase Admin SDK
-cred = credentials.Certificate("serviceAccountKey.json")
+# Initialize Firebase Admin SDK.
+# Prefer a path supplied via env; fall back to the legacy file in the working dir
+# so existing deployments keep running without .env changes.
+_cred_path = settings.GOOGLE_APPLICATION_CREDENTIALS or "serviceAccountKey.json"
+cred = credentials.Certificate(_cred_path)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 

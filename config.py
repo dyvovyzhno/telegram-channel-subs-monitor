@@ -39,5 +39,11 @@ class Settings(BaseSettings):
     # Logging verbosity — raise to "DEBUG" when investigating, lower to "WARNING" for quieter prod
     LOG_LEVEL: str = "INFO"
 
+    # Absolute path to the Firebase service-account JSON. Optional: when unset we fall
+    # back to "serviceAccountKey.json" in the working dir so existing deployments keep
+    # working. Prefer an absolute path outside the repo (e.g. /etc/secrets/…) so the
+    # key lives outside version-controlled territory.
+    GOOGLE_APPLICATION_CREDENTIALS: str | None = None
+
 
 settings = Settings()  # type: ignore[call-arg]
