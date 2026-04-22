@@ -4,7 +4,6 @@ import asyncio
 import re
 
 import sentry_sdk
-from decouple import config
 from telethon.errors import SessionPasswordNeededError
 from telethon.sync import TelegramClient
 from telethon.tl.functions.channels import GetAdminLogRequest, GetFullChannelRequest
@@ -15,36 +14,24 @@ from telethon.tl.types import (
     InputChannel,
 )
 
+from config import settings
 from models.admin_action import AdminAction
-
-API_ID = config("API_ID", default="", cast=int)
-if not API_ID:
-    raise ValueError("API_ID is not set!")
-API_HASH = str(config("API_HASH", default=""))
-if not API_HASH:
-    raise ValueError("API_HASH is not set!")
-PHONE_NUMBER = str(config("PHONE_NUMBER", default=""))
-if not PHONE_NUMBER:
-    raise ValueError("PHONE_NUMBER is not set!")
-CHANNEL_ID_TO_MONITOR = config("CHANNEL_ID_TO_MONITOR", default="")
-if not CHANNEL_ID_TO_MONITOR:
-    raise ValueError("CHANNEL_ID_TO_MONITOR is not set!")
 
 
 async def setup_telethon():
     try:
-        client = TelegramClient("anon", API_ID, API_HASH)
+        client = TelegramClient("anon", settings.API_ID, settings.API_HASH)
 
         if not client.is_connected():
             await client.connect()
 
         if not await client.is_user_authorized():
-            await client.send_code_request(PHONE_NUMBER)
+            await client.send_code_request(settings.PHONE_NUMBER)
             # Blocking input is acceptable here: auth only happens once, before the
             # scheduler loop starts — no concurrent tasks on the loop to stall.
             verification_code = input("Enter the code: ")  # noqa: ASYNC250
             try:
-                await client.sign_in(PHONE_NUMBER, verification_code)
+                await client.sign_in(settings.PHONE_NUMBER, verification_code)
             except SessionPasswordNeededError:
                 two_step_verif_password = input(  # noqa: ASYNC250
                     "Two-step verification is enabled. Please enter your password: "
@@ -60,7 +47,7 @@ async def setup_telethon():
 
 async def get_admin_actions(client):
     # Get channel entity to fetch the InputChannel later
-    channel = await client.get_entity(CHANNEL_ID_TO_MONITOR)
+    channel = await client.get_entity(settings.CHANNEL_ID_TO_MONITOR)
     if not isinstance(channel, Channel):
         print("The provided ID does not belong to a channel!")
         return []

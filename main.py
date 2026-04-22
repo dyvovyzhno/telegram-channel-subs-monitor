@@ -3,8 +3,8 @@
 import asyncio
 
 import sentry_sdk
-from decouple import config
 
+from config import settings
 from firebase_methods import (
     get_last_hash_from_firebase,
     send_missing_events_to_channel,
@@ -12,16 +12,9 @@ from firebase_methods import (
 )
 from telethon_methods import get_admin_actions, get_last_message_hash, setup_telethon
 
-SENTRY_DSN = str(config("SENTRY_DSN", default=""))
-if not SENTRY_DSN:
-    raise ValueError("SENTRY_DSN is not set!")
-CHAT_URL = str(config("CHAT_URL", default=""))
-if not CHAT_URL:
-    raise ValueError("CHAT_URL is not set!")
-
 # Initialize Sentry at the top
 sentry_sdk.init(
-    dsn=SENTRY_DSN,
+    dsn=settings.SENTRY_DSN,
     traces_sample_rate=1.0,  # Adjust this rate as per your needs
 )
 
@@ -43,7 +36,7 @@ async def job():
             print("Telethon client set up successfully.")
 
         # Get the latest hash from the Telegram channel
-        last_message_hash = await get_last_message_hash(client, CHAT_URL)
+        last_message_hash = await get_last_message_hash(client, settings.CHAT_URL)
 
         # Get the latest hash from Firebase
         last_firestore_hash = get_last_hash_from_firebase()
