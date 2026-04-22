@@ -1,5 +1,7 @@
 # firebase_methods.py
 
+import logging
+
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.api_core.retry import Retry
@@ -8,6 +10,8 @@ from sentry_sdk import capture_exception
 
 from bot_methods import send_message_to_channel
 from config import settings
+
+logger = logging.getLogger(__name__)
 
 # Fail fast if Firestore is unreachable instead of hanging the whole scheduler.
 # deadline bounds total wait across retries; timeout is per-attempt.
@@ -61,15 +65,17 @@ def store_action_to_firebase(action_data: dict):
                     action_data["total_left"] = latest_action["total_left"] + 1
 
             admin_actions_ref.add(action_data, timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY)
-            print(f"Stored action data for user {action_data['user_id']} to Firestore")
+            logger.info("Stored action data for user %s to Firestore", action_data["user_id"])
 
             message = "\n".join([f"{key}: {value}" for key, value in action_data.items()])
             send_message_to_channel(settings.BOT_API, settings.CHAT_ID, message)
         else:
-            print(f"Action data with hash {action_data['hash']} already exists. Skipping.")
+            logger.debug(
+                "Action data with hash %s already exists; skipping", action_data["hash"]
+            )
 
     except Exception as e:
-        print(f"Error storing data to Firestore: {e}")
+        logger.exception("Error storing data to Firestore: %s", e)
         capture_exception(e)
 
 
@@ -82,7 +88,7 @@ def send_missing_events_to_channel(last_known_hash):
     ).get(timeout=_FIRESTORE_TIMEOUT, retry=_FIRESTORE_RETRY)
 
     if not hash_date_doc:
-        print("Hash not found.")
+        logger.warning("Hash %s not found", last_known_hash)
         return
 
     hash_date = (hash_date_doc[0].to_dict() or {}).get("date")

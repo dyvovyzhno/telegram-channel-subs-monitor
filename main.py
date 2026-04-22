@@ -1,6 +1,7 @@
 # main.py
 
 import asyncio
+import logging
 
 import sentry_sdk
 
@@ -10,7 +11,11 @@ from firebase_methods import (
     send_missing_events_to_channel,
     store_action_to_firebase,
 )
+from logging_config import setup_logging
 from telethon_methods import get_admin_actions, get_last_message_hash, setup_telethon
+
+setup_logging(settings.LOG_LEVEL)
+logger = logging.getLogger(__name__)
 
 # Initialize Sentry at the top
 sentry_sdk.init(
@@ -25,15 +30,15 @@ async def job():
     try:
         global client
 
-        print("Fetching new admin actions...")
+        logger.info("Fetching new admin actions")
 
         # Ensure client is properly set up
         if client is None:
             client = await setup_telethon()
             if not client:
-                print("Error setting up the client.")
+                logger.error("Error setting up the client")
                 return
-            print("Telethon client set up successfully.")
+            logger.info("Telethon client set up successfully")
 
         # Get the latest hash from the Telegram channel
         last_message_hash = await get_last_message_hash(client, settings.CHAT_URL)
@@ -53,7 +58,7 @@ async def job():
                 store_action_to_firebase(action.to_dict())
     except Exception as e:
         sentry_sdk.capture_exception(e)
-        print(f"Error in job: {e}")
+        logger.exception("Error in job: %s", e)
 
 
 async def wait_for_five_minutes():

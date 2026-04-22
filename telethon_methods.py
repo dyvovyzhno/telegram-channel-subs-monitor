@@ -1,6 +1,7 @@
 # telethon_methods.py
 
 import asyncio
+import logging
 import re
 
 import sentry_sdk
@@ -16,6 +17,8 @@ from telethon.tl.types import (
 
 from config import settings
 from models.admin_action import AdminAction
+
+logger = logging.getLogger(__name__)
 
 
 async def setup_telethon():
@@ -49,11 +52,11 @@ async def get_admin_actions(client):
     # Get channel entity to fetch the InputChannel later
     channel = await client.get_entity(settings.CHANNEL_ID_TO_MONITOR)
     if not isinstance(channel, Channel):
-        print("The provided ID does not belong to a channel!")
+        logger.warning("Provided ID does not belong to a channel")
         return []
 
     if channel.access_hash is None:
-        print("Error: Channel access hash is None!")
+        logger.error("Channel access hash is None")
         return []
 
     # Get total channel members count
