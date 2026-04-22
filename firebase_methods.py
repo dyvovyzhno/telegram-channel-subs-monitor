@@ -1,28 +1,18 @@
 # firebase_methods.py
 
 import firebase_admin
-from decouple import config
 from firebase_admin import credentials, firestore
 from google.api_core.retry import Retry
 from google.cloud.firestore import FieldFilter, Query
 from sentry_sdk import capture_exception
 
 from bot_methods import send_message_to_channel
+from config import settings
 
 # Fail fast if Firestore is unreachable instead of hanging the whole scheduler.
 # deadline bounds total wait across retries; timeout is per-attempt.
 _FIRESTORE_TIMEOUT = 10.0
 _FIRESTORE_RETRY = Retry(deadline=30.0)
-
-
-# BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
-# CHAT_ID = "@YourChannelName"  # or some chat ID
-BOT_API = str(config("BOT_API", default=""))
-if not BOT_API:
-    raise ValueError("BOT_API is not set!")
-CHAT_ID = str(config("CHAT_ID", default=""))
-if not CHAT_ID:
-    raise ValueError("CHAT_ID is not set!")
 
 
 # Initialize Firebase Admin SDK
@@ -74,7 +64,7 @@ def store_action_to_firebase(action_data: dict):
             print(f"Stored action data for user {action_data['user_id']} to Firestore")
 
             message = "\n".join([f"{key}: {value}" for key, value in action_data.items()])
-            send_message_to_channel(BOT_API, CHAT_ID, message)
+            send_message_to_channel(settings.BOT_API, settings.CHAT_ID, message)
         else:
             print(f"Action data with hash {action_data['hash']} already exists. Skipping.")
 
@@ -107,7 +97,7 @@ def send_missing_events_to_channel(last_known_hash):
     for action in missing_actions:
         action_data = action.to_dict() or {}
         message = "\n".join([f"{key}: {value}" for key, value in action_data.items()])
-        send_message_to_channel(BOT_API, CHAT_ID, message)
+        send_message_to_channel(settings.BOT_API, settings.CHAT_ID, message)
 
 
 def get_last_hash_from_firebase():
